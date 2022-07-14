@@ -6,6 +6,7 @@ const gameData = [
 
 let editedPlayer = 0;
 let activePlayer = 0;
+let currentRound = 1;
 
 const players = [
   {
@@ -24,6 +25,7 @@ const formElement = document.querySelector("form");
 const errorsOutputElement = document.getElementById("config-errors");
 const gameAreaElement = document.getElementById("active-game");
 const activePlayerNameElement = document.getElementById("active-player-name");
+const gameOverElement = document.getElementById("game-over");
 
 const editPlayer1BtnElement = document.getElementById("edit-player-1-btn");
 const editPlayer2BtnElement = document.getElementById("edit-player-2-btn");
@@ -31,6 +33,7 @@ const editPlayer2BtnElement = document.getElementById("edit-player-2-btn");
 const cancelConfigBtnElement = document.getElementById("cancel-config-btn");
 const startNewGameBtnElement = document.getElementById("start-game-btn");
 const gameFieldElements = document.querySelectorAll("#game-board li");
+const gameBoardElement = document.getElementById("game-board");
 
 function openPlayerConfig() {
   editedPlayer = +event.target.dataset.playerid;
@@ -78,11 +81,34 @@ function savePlayerConfig(event) {
 
 formElement.addEventListener("submit", savePlayerConfig);
 
+function resetGameStatus() {
+  activePlayer = 0;
+  currentRound = 1;
+  gameOverElement.firstElementChild.innerHTML =
+    'You won, <span id="winner-name">PLAYER NAME</span>!';
+  gameOverElement.style.display = "none";
+
+  //nafahmidm??
+  let gameBoardIndex = 0;
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; i < 3; j++) {
+      gameData[i][j] = 0;
+
+      gameBoardElement.children[gameBoardIndex].textContent = " ";
+      gameBoardElement.children[gameBoardIndex].classList.remove("disable");
+      gameBoardIndex++;
+    }
+  }
+}
+
 function starNewGame() {
   if (players[0].name === "" || players[1].name === "") {
     alert("Please set custom player names for both players");
     return;
   }
+
+  resetGameStatus();
+
   activePlayerNameElement.textContent = players[activePlayer].name;
   gameAreaElement.style.display = "block";
 }
@@ -111,11 +137,72 @@ function selectGameField(event) {
   selectedField.classList.add("disable");
 
   gameData[selectedRow][selectedColumn] = activePlayer + 1;
-  console.log(gameData);
 
+  const winnerId = checkForGameOver();
+
+  if (winnerId !== 0) {
+    endGame(winnerId);
+  }
+
+  currentRound++;
   switchPlayer();
 }
 
 for (const gameFieldElement of gameFieldElements) {
   gameFieldElement.addEventListener("click", selectGameField);
+}
+
+function checkForGameOver() {
+  for (let i = 0; i < 3; i++) {
+    if (
+      gameData[i][0] > 0 &&
+      gameData[i][0] === gameData[i][1] &&
+      gameData[i][1] === gameData[i][2]
+    ) {
+      return gameData[i][0];
+    }
+  }
+
+  for (let i = 0; i < 3; i++) {
+    if (
+      gameData[0][i] > 0 &&
+      gameData[0][i] === gameData[1][i] &&
+      gameData[0][i] === gameData[2][i]
+    ) {
+      return gameData[0][i];
+    }
+  }
+
+  if (
+    gameData[0][0] > 0 &&
+    gameData[0][0] === gameData[1][1] &&
+    gameData[1][1] === gameData[2][2]
+  ) {
+    return gameData[0][0];
+  }
+
+  if (
+    gameData[2][0] > 0 &&
+    gameData[2][0] === gameData[1][1] &&
+    gameData[1][1] === gameData[0][2]
+  ) {
+    return gameData[2][0];
+  }
+
+  if (currentRound === 9) {
+    return -1;
+  }
+  return 0;
+}
+
+function endGame(winnerId) {
+  gameOverElement.style.display = "block";
+
+  if (winnerId > 0) {
+    const winnerName = players[winnerId - 1].name;
+    gameOverElement.firstElementChild.firstElementChild.textContent =
+      winnerName;
+  } else {
+    gameOverElement.firstElementChild.textContent = "it's a draw!";
+  }
 }
