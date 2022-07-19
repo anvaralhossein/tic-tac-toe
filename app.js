@@ -7,6 +7,7 @@ const gameData = [
 let editedPlayer = 0;
 let activePlayer = 0;
 let currentRound = 1;
+let gameIsOver = false;
 
 const players = [
   {
@@ -84,18 +85,21 @@ formElement.addEventListener("submit", savePlayerConfig);
 function resetGameStatus() {
   activePlayer = 0;
   currentRound = 1;
+  gameIsOver = false;
   gameOverElement.firstElementChild.innerHTML =
     'You won, <span id="winner-name">PLAYER NAME</span>!';
   gameOverElement.style.display = "none";
 
   //nafahmidm??
   let gameBoardIndex = 0;
-  for (let i = 0; i < 3; i++) {
-    for (let j = 0; i < 3; j++) {
+  for (let i = 0; i < gameData.length; i++) {
+    for (let j = 0; j < gameData.length; j++) {
       gameData[i][j] = 0;
 
-      gameBoardElement.children[gameBoardIndex].textContent = " ";
-      gameBoardElement.children[gameBoardIndex].classList.remove("disable");
+      // console.log(gameBoardElement.children[gameBoardIndex]);
+      const gameBoarItemdElement = gameFieldElements[gameBoardIndex];
+      gameBoarItemdElement.textContent = "  ";
+      gameBoarItemdElement.classList.remove("disable");
       gameBoardIndex++;
     }
   }
@@ -106,11 +110,9 @@ function starNewGame() {
     alert("Please set custom player names for both players");
     return;
   }
-
-  resetGameStatus();
-
-  activePlayerNameElement.textContent = players[activePlayer].name;
   gameAreaElement.style.display = "block";
+  resetGameStatus();
+  activePlayerNameElement.textContent = players[activePlayer].name;
 }
 
 startNewGameBtnElement.addEventListener("click", starNewGame);
@@ -125,6 +127,9 @@ function switchPlayer() {
 }
 
 function selectGameField(event) {
+  if (event.target.tagName != "LI" || gameIsOver) {
+    return;
+  }
   const selectedField = event.target;
   const selectedColumn = selectedField.dataset.col - 1;
   const selectedRow = selectedField.dataset.row - 1;
@@ -148,9 +153,11 @@ function selectGameField(event) {
   switchPlayer();
 }
 
-for (const gameFieldElement of gameFieldElements) {
-  gameFieldElement.addEventListener("click", selectGameField);
-}
+//for (const gameFieldElement of gameFieldElements) {
+//gameFieldElement.addEventListener("click", selectGameField);
+//}
+
+gameBoardElement.addEventListener("click", selectGameField);
 
 function checkForGameOver() {
   for (let i = 0; i < 3; i++) {
@@ -196,6 +203,7 @@ function checkForGameOver() {
 }
 
 function endGame(winnerId) {
+  gameIsOver = true;
   gameOverElement.style.display = "block";
 
   if (winnerId > 0) {
